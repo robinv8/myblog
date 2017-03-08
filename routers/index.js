@@ -9,5 +9,5 @@ module.exports = (app) => {
   app.use('/signup', require('./signup'));
   app.use('/signIn', require('./signin'));
   app.use('/signout', require('./signout'));
-  app, use('/posts', require('./posts'));
+  app.use('/posts', require('./posts'));
 }
