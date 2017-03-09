@@ -11,6 +11,9 @@ var flash = require('connect-flash');
 var config = require('config-lite');
 var routers = require('./routers');
 var pkg = require('./package');
+var winston = require('winston');
+var expressWinston = require('express-winston');
+
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -49,10 +52,41 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error').toString();
   next();
 });
-
-routers(app);
-
-
-app.listen(config.port, () => {
-  console.log(`${pkg.name} listening on port ${config.port}`);
+app.use((err, req, res, next) => {
+  res.render('error', {
+    error: err
+  });
 });
+
+app.use(expressWinston.logger({
+  transports: [
+    new (winston.transports.Console)({
+      json: true,
+      colorize: true
+    }),
+    new winston.transports.File({
+      filename: 'logs/success.log'
+    })
+  ]
+}));
+routers(app);
+// 错误请求的日志
+app.use(expressWinston.errorLogger({
+  transports: [
+    new winston.transports.Console({
+      json: true,
+      colorize: true
+    }),
+    new winston.transports.File({
+      filename: 'logs/error.log'
+    })
+  ]
+}));
+
+if (module.parent) {
+  module.exports = app;
+} else {
+  app.listen(config.port, () => {
+    console.log(`${pkg.name} listening on port ${config.port}`);
+  });
+}
